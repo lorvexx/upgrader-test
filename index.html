@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>NEON DROP</title>
+<title>NEON DROP · тест</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&family=Unbounded:wght@500;700&display=swap" rel="stylesheet">
 <style>
@@ -151,6 +151,7 @@ body{background:radial-gradient(900px 420px at 50% -120px,rgba(25,255,140,.14),t
 @keyframes shk{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(8deg)}}
 .row2{display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--s1);border-radius:14px;padding:10px 12px;margin-bottom:8px}
 .row2 small{display:block;color:var(--mu);font-size:12px}
+.devbar{margin:48px 0 24px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;opacity:.55}.devbar .chip{font-size:11px;min-height:30px;padding:6px 10px}
 .feed{position:sticky;top:env(safe-area-inset-top,0px);z-index:7;display:flex;align-items:center;gap:8px;height:46px;margin:0 -16px;padding-left:12px;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--s2)}
 .onl{flex:none;display:flex;gap:6px;align-items:center;font:700 11px Unbounded,system-ui,sans-serif;color:var(--ac);padding-right:8px;border-right:1px solid var(--s2)}
 .dot{width:8px;height:8px;border-radius:50%;background:var(--ac);box-shadow:0 0 8px var(--ac);animation:blink 1.6s infinite}
@@ -264,6 +265,7 @@ button:active{transform:scale(.97)}
   <div class="sign"><span>NEON</span><span>DROP</span></div>
   <header><button class="me" id="me" onclick="go('pf')" aria-label="Профиль"></button><div class="bal" id="bal"><i>◈</i><span id="balv">0</span></div></header>
   <main id="main"></main>
+  <div class="devbar" id="dev"></div>
 </div>
 <nav id="nav"></nav>
 <div class="toast" id="toast"></div>
@@ -297,7 +299,7 @@ function vUp(){
   return `<button class="go" id="gob" onclick="spin()" style="margin-top:0" ${err||busy?"disabled":""}>Апгрейд</button><div class="hint" style="margin-bottom:6px">${busy?"Крутим…":err}</div><button class="go alt" onclick="mystery()" ${busy||!stakeVal()?"disabled":""}>🎁 Мистери-апгрейд · скин гарантирован</button><div class="sum"><div><small>Ставка</small><b>◈ ${fmt(stakeVal())}</b></div><div class="ar">→</div><div><small>Цель</small><b>${target!==null?esc(SK[target].n):"не выбрана"}</b><small>${target!==null?"◈ "+fmt(SK[target].p):"выбери ниже"}</small></div></div><div class="wheelBox" id="wb"><svg viewBox="0 0 200 200"><circle class="trk" cx="100" cy="100" r="86"/><circle class="arc" cx="100" cy="100" r="86" transform="rotate(-90 100 100)" stroke-dasharray="${Math.max(p*C,p>0?.6:0).toFixed(2)} ${C.toFixed(1)}"/><g class="needle" id="nd" style="transform:rotate(${R}deg)"><path d="M92 2h16l-8 21z"/></g></svg>
   <div class="mid"><b>${pct(p)}</b><span>шанс победы</span></div></div>${r}
   <div class="sec"><h2>Ставка</h2><div class="stake"><span>Сумма ставки</span><b><span style="color:var(--gold)">◈</span> ${fmt(stakeVal())}</b></div>
-  <div class="chips">${[1,10,100,500,1000,5000].map(v=>`<button class="chip" onclick="addX(${v})">+${fmt(v)}</button>`).join("")}<button class="chip" onclick="addX(st.bal)">Всё</button><button class="chip" onclick="selAll()">Все скины</button><button class="chip x" onclick="clr()">Сбросить</button></div></div>
+  <div class="chips">${[1,10,100,500,1000,5000].map(v=>`<button class="chip" onclick="addX(${v})">+${fmt(v)}</button>`).join("")}<button class="chip" onclick="addX(st.inf?7e6:st.bal)">Всё</button><button class="chip" onclick="selAll()">Все скины</button><button class="chip x" onclick="clr()">Сбросить</button></div></div>
   <div class="sec"><h2>Твои скины в ставку</h2>${stakeCards}</div>
   <div class="sec"><h2>Что хочешь получить · быстрый шанс</h2><div class="chips" style="margin-bottom:10px">${[.01,1,10,25,35,50,55,75].map(x=>`<button class="chip" onclick="setCh(${x})">${x}%</button>`).join("")}</div>${tg?`<div class="row">${tg}</div>`:`<div class="empty">Нет скинов дороже такой ставки</div>`}</div>
   `}
@@ -313,7 +315,7 @@ function spin(){
   if(busy||check())return;
   const p=chance(),tid=target,stk=stakeVal();busy=true;res=null;
   st.bal-=extra;st.inv=st.inv.filter(i=>!sel.has(i.uid));
-  const u=Math.random(),win=u<p;
+  const u=st.win?Math.random()*p:Math.random(),win=u<p;
   balSet();
   const nd=document.getElementById("nd"),gb=document.getElementById("gob");
   gb.disabled=true;document.querySelector(".hint").textContent="Крутим…";
@@ -364,7 +366,7 @@ const iv=i=>({...SK[i.id],p:itemVal(i),st:i.s||[]});
 const tgAll=()=>{const v=stakeVal();return v?RK.filter(s=>s.p>v&&v/s.p*EDGE>=.0001):RK.slice(0,40)};
 const tgList=()=>{const a=tgAll();if(a.length<=150)return a;const k=a.length/150,o=Array.from({length:150},(_,i)=>a[Math.floor(i*k)]);if(target!==null&&SK[target]&&!o.some(s=>s.id===target)){o.push(SK[target]);o.sort((x,y)=>x.p-y.p)}return o};
 const pct=p=>{const x=p*100;return(x>=10?x.toFixed(0):x>=1?x.toFixed(1):x.toFixed(2))+"%"};
-function navR(){balSet();document.getElementById("me").innerHTML=av(st.pf)+"<b>"+esc(nick())+"</b>";const pv=document.getElementById("pv");if(pv)pv.innerHTML=pvH();document.getElementById("nav").innerHTML=[["up","⚡","Апгрейд"],["case","📦","Кейсы"],["mp","🌐","Онлайн"+badge()],["shop","🛒","Магазин"],["inv","🎒","Скины "+st.inv.length]].map(([k,i,l])=>`<button class="${tab===k?"on":""}" onclick="go('${k}')"><span class="ni">${i}</span>${l}</button>`).join("")}
+function navR(){if(st.inf&&st.bal<1e11)st.bal=1e12;balSet();document.getElementById("dev").innerHTML=tab==="up"?`<button class="chip ${st.inf?"on":""}" onclick="togInf()">♾ Бесконечный баланс</button><button class="chip ${st.win?"on":""}" onclick="togWin()">🎯 Все апгрейды выигрышные</button><button class="chip ${st.mp?"on":""}" onclick="togMp()">💎 Мистери всегда в плюс</button>`:"";document.getElementById("me").innerHTML=av(st.pf)+"<b>"+esc(nick())+"</b>";const pv=document.getElementById("pv");if(pv)pv.innerHTML=pvH();document.getElementById("nav").innerHTML=[["up","⚡","Апгрейд"],["case","📦","Кейсы"],["mp","🌐","Онлайн"+badge()],["shop","🛒","Магазин"],["inv","🎒","Скины "+st.inv.length]].map(([k,i,l])=>`<button class="${tab===k?"on":""}" onclick="go('${k}')"><span class="ni">${i}</span>${l}</button>`).join("")}
 function render(){navR();sndR();document.getElementById("main").innerHTML=tab==="up"?vUp():tab==="mp"?vMp():tab==="pf"?vPf():tab==="case"?vCase():tab==="shop"?vShop():vInv()}
 const stkCard=(k,x,c)=>{const s=STK[k];return `<button class="card ${ss===x?"sel":""}" style="flex:0 0 96px" onclick="${c}"><div class="art sa${st.im["s"+k]?" ph":""}" style="--h:${k*37%360};height:56px;display:grid;place-items:center;font-size:30px${st.im["s"+k]?`;--im:url(${st.im["s"+k]})`:""}"><span style="position:relative;z-index:1">${st.im["s"+k]?"":s.e}</span></div><div class="nm">${s.n}</div><div class="pr"><i>◈</i> ${fmt(s.p)}</div><div class="rar ${rar(s.p)}"></div></button>`};
 function shopGrid(){const l=SK.filter(s=>!s.x&&s.n.toLowerCase().includes(q.toLowerCase())&&(cat==="k"?KN(s):cat==="g"?GL(s):cat==="w"?!KN(s)&&!GL(s):true)).sort((a,b)=>a.p-b.p);return `<div class="grid">${l.slice(0,lim).map(s=>card(s,{extra:`<button class="btn buy" ${st.bal<s.p?"disabled":""} onclick="buy(${s.id})">Купить</button>`})).join("")}</div>${l.length>lim?`<button class="btn" style="padding:12px" onclick="lim+=24;document.getElementById('sg').innerHTML=shopGrid()">Показать ещё</button>`:l.length?"":`<div class="empty">Ничего не найдено</div>`}`}
@@ -485,6 +487,10 @@ async function buyTrade(id){const t=TR.find(x=>x.id===id);if(!t||t.seller===ME||
   try{const r=DB.doc("trades/"+id),a=await r.acquire({holder:ME,ttlMs:8000});if(!a.acquired){toast("Кто-то уже покупает");return}const s=await r.get();if(!s.exists||s.data().state!=="open"){toast("Уже продано");return}
     st.bal-=t.ask;paid=1;save();navR();await r.update({state:"sold",buyer:ME});st.inv.push({uid:st.uid++,id:t.skin,s:(t.stk||[]).filter(k=>STK[k]).slice(0,4)});save();navR();bump();toast("Куплено: "+SK[t.skin].n);rerMp()}catch(e){if(paid){st.bal+=t.ask;save();navR()}toast("Не удалось купить")}}
 
+const bt=()=>st.inf?"∞":fmt(st.bal);
+function togInf(){if(busy)return;if(st.inf){st.inf=0;st.bal=st.balBak||1000}else{st.inf=1;st.balBak=st.bal;st.bal=1e12}save();render();toast(st.inf?"Баланс бесконечный":"Обычный баланс")}
+function togWin(){st.win=st.win?0:1;save();render();toast(st.win?"Все апгрейды выигрышные":"Обычные шансы")}
+
 function vFree(){const sk=fs>=5,fc=sk?FSK[fs-5]:null,m=sk?0:FREE[fs],cd=fcd(fs),h=sk?60+(fs-5)*55:140+fs*20;
   const idle=Array.from({length:12},()=>sk?cellH(pickFrom(fc)):coinCell(rollCoin(m))).join("");
   const rs=sk?(fdrop?`<div class="res win"><div ${ia("w"+fdrop.t,fdrop.h,"art w"+fdrop.t)}></div><div><h3>${esc(fdrop.n)}</h3><p>◈ ${fmt(fdrop.p)} · уже в инвентаре</p></div></div>`:""):(fres?`<div class="res win"><div><h3>+ ◈ ${fres}</h3><p>Монеты уже на балансе</p></div></div>`:"");
@@ -520,6 +526,7 @@ async function usePromo(){const el=document.getElementById("pcode"),code=((el&&e
   if(pr.c){st.bal+=pr.c;msg="+ ◈ "+fmt(pr.c)}
   else{const pool=RK.filter(s=>s.p>=50&&s.p<=pr.max&&(pr.k==="knife"?KN(s):pr.k==="glove"?GL(s):true)),w=pool[Math.floor(Math.random()*pool.length)];st.inv.push({uid:st.uid++,id:w.id,s:[]});msg="Скин: "+w.n}
   save();render();bump();toast("Промокод принят! "+msg)}
+function togMp(){st.mp=st.mp?0:1;save();render();toast(st.mp?"Мистери всегда в плюс":"Обычное Мистери")}
 
 function rollStrip(cells,WI,done,rk){const strip=document.getElementById("strip"),rl=document.getElementById("rl");strip.className="strip";strip.innerHTML=cells.join("");strip.style.transition="none";strip.style.transform="translateX(0)";strip.getBoundingClientRect();
   const off=WI*120+56+10-rl.clientWidth/2+(Math.random()*72-36);strip.style.transition="transform 6.2s cubic-bezier(.1,.72,.1,1)";strip.style.transform=`translateX(${-off}px)`;
